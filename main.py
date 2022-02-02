@@ -61,7 +61,7 @@ def read_coordinate_file(filename):
 
     return coord_list
 
-
+# Timing the first function and printing to command window, this will be repeated for every function.
 start = time.time()
 coord_list = read_coordinate_file(filename)
 end = time.time()
@@ -83,7 +83,7 @@ def construct_graph_connections(coord_list, radius):
     first_index_list = []
     second_index_list = []
     for i, coord_i in enumerate(coord_list):
-        for j in range(i + 1, len(coord_list)):    # Loop skipping first element to prevent duplicates
+        for j in range(i + 1, len(coord_list)):    # Loop skipping the first element to prevent duplicates
             coord_j = coord_list[j]
             d = coord_i - coord_j
             distance = math.sqrt(d[0] ** 2 + d[1] ** 2)     # Calculates distance between two points
@@ -120,16 +120,14 @@ def construct_fast_graph_connections(coord_list, radius):
 
 
 start = time.time()
-[distance, indices] = construct_fast_graph_connections(coord_list, radius)
-end = time.time()
-print("construct_fast_graph_connections: ", end - start)
-
-
-
-start = time.time()
 [distance, indices] = construct_graph_connections(coord_list, radius)
 end = time.time()
 print("construct_graph_connections: ", end - start)
+
+start = time.time()
+[distance, indices] = construct_fast_graph_connections(coord_list, radius)
+end = time.time()
+print("construct_fast_graph_connections: ", end - start)
 
 
 N = len(coord_list)     # Number of cities
@@ -145,7 +143,7 @@ def construct_graph(indices, distance, N):
     :param N: number of cities
     :return: sparse graph of indices and distances of the cities
     """
-    M = N
+    M = N   # M should be same length as N
     sparse_graph = csr_matrix((distance, (indices[:, 0], indices[:, 1])), shape=(M, N))     # Scipy method for csr
     return sparse_graph
 
@@ -153,16 +151,16 @@ def construct_graph(indices, distance, N):
 start = time.time()
 graph = construct_graph(indices, distance, N)
 end = time.time()
-
-
 print("construct_graph: ", end - start)
 
 
 def find_shortest_path(graph, start_node, end_node):
     """
     find_shortest_path
-
-    :param graph:
+    Uses Scipy method shortest_path to determine the shortest path and its length. The function takes sparse graph as
+    input and a start coordinate. The function then calculates the distance between every other coordinate and said coordinate
+    including itself. The function also returns a predecessor array from which the shortest path can be extracted.
+    :param graph: sparse graph
     :param start_node: start city
     :param end_node: end city
     :return: The shortest path and its length
@@ -170,14 +168,14 @@ def find_shortest_path(graph, start_node, end_node):
     path = [end_node]
     dist_matrix, predecessors = shortest_path(csgraph=graph, directed=False, indices=start_node,
                                               return_predecessors=True)
-    path_length = dist_matrix[end_node]
+    path_length = dist_matrix[end_node]     # Takes the shortest path's length
     current_node = end_node
 
-    while current_node != start_node:
+    while current_node != start_node:   # Creates the shortest path from predecessors by back tracking from the end node
         current_node = predecessors[current_node]
         path.append(current_node)
 
-    path = path[::-1]
+    path = path[::-1]      # Reverse the path into chronological order
 
     return path, path_length
 
