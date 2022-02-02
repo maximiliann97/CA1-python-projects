@@ -11,6 +11,7 @@ file = ["SampleCoordinates.txt", "HungaryCities.txt", "GermanyCities.txt"]
 radius = [0.08, 0.005, 0.0025]
 start_city = [0, 311, 1573]
 end_city = [5, 702, 10584]
+R = 1   # normalized radii
 
 file_to_run = int(input('Type 1,2 or 3 to select file to run\n 1: SampleCoordinates\n 2: HungaryCities\n 3:'
                         ' GermanyCities\n'))
@@ -38,7 +39,7 @@ elif file_to_run == 3:
 def read_coordinate_file(filename):
     """
     read_coordinate_file
-    Takes a text-file as input and trims the data into the desired form. Then extracts coordinates in longitude and
+    takes a text-file as input and trims the data into the desired form. Then extracts coordinates in longitude and
     latitude form from each line in the data file and recalculates the coordinates to (x,y)-form and saves to a
     numpy array.
 
@@ -55,8 +56,8 @@ def read_coordinate_file(filename):
                 list_of_floats.append(float(item))
     float_list = np.array(list_of_floats)
     reshaped_list = float_list.reshape(len(float_list) // 2, 2)     # Reshapes array into matrix with [x,y]
-    x_coordinates = (reshaped_list[:, 1] * np.pi) / 180     # Mercator projector for x
-    y_coordinates = np.log(np.tan((np.pi / 4 + (reshaped_list[:, 0] * np.pi) / 360)))   # Mercator projector for y
+    x_coordinates = R * (reshaped_list[:, 1] * np.pi) / 180     # Mercator projector for x
+    y_coordinates = R * np.log(np.tan((np.pi / 4 + (reshaped_list[:, 0] * np.pi) / 360)))   # Mercator projector for y
     coord_list = np.array([x_coordinates, y_coordinates]).T
 
     return coord_list
@@ -72,7 +73,7 @@ print("read_coordinate_file: ", end - start)
 def construct_graph_connections(coord_list, radius):
     """
     construct_graph_connections
-    Checks all coordinates from coord_list against each other to see if they are inside the given radius.
+    checks all coordinates from coord_list against each other to see if they are inside the given radius.
 
     :param coord_list: List of coordinates for all cities (x,y)-form
     :param radius: Minimum radius for coordinate point to be within
@@ -100,7 +101,7 @@ def construct_graph_connections(coord_list, radius):
 def construct_fast_graph_connections(coord_list, radius):
     """
     construct_fast_graph_connections
-    Checks all coordinates from coord_list against each other to see if they are inside the given radius. This is
+    checks all coordinates from coord_list against each other to see if they are inside the given radius. This is
     essentially a faster way to do the previous function by using spatial algorithms.
     :param coord_list:
     :param radius:
@@ -136,7 +137,7 @@ N = len(coord_list)     # Number of cities
 def construct_graph(indices, distance, N):
     """
     construct_graphs
-    Takes indices of connected cities and distances between them and stores in a compressed sparse row matrix
+    takes indices of connected cities and distances between them and stores in a compressed sparse row matrix
     (csr) which is a compact way to represent the data.
     :param indices:
     :param distance:
@@ -157,7 +158,7 @@ print("construct_graph: ", end - start)
 def find_shortest_path(graph, start_node, end_node):
     """
     find_shortest_path
-    Uses Scipy method shortest_path to determine the shortest path and its length. The function takes sparse graph as
+    uses Scipy method shortest_path to determine the shortest path and its length. The function takes sparse graph as
     input and a start coordinate. The function then calculates the distance between every other coordinate and said coordinate
     including itself. The function also returns a predecessor array from which the shortest path can be extracted.
     :param graph: sparse graph
@@ -176,7 +177,6 @@ def find_shortest_path(graph, start_node, end_node):
         path.append(current_node)
 
     path = path[::-1]      # Reverse the path into chronological order
-
     return path, path_length
 
 
@@ -189,7 +189,7 @@ print("find_shortest_path: ", end - start)
 def plot_points(coord_list, indices, path):
     """
     plot_points
-    Plots all cities, the lines between them if they are within the given radius and the shortest path between
+    plots all cities, the lines between them if they are within the given radius and the shortest path between
     start city and end city. Utilizing LineCollection to plot the lines more efficiently.
     :param coord_list:
     :param indices:
@@ -210,7 +210,7 @@ def plot_points(coord_list, indices, path):
     line_segments = LineCollection(lines, linewidths=0.3, colors='grey')
     ax.add_collection(line_segments)
 
-    # Adds title, legenda and axis labels
+    # Adds title, legend and axis labels
     ax.legend(['Cities', 'Shortest Path'])
     plt.title('Shortest Path')
     ax.set_xlabel('x')
@@ -223,3 +223,7 @@ start = time.time()
 plot_points(coord_list, indices, path)
 end = time.time()
 print("plot_points: ", start - end)
+
+# Prints path and length
+print(path)
+print(path_length)
