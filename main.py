@@ -7,33 +7,6 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 import time
 
-file = ["SampleCoordinates.txt", "HungaryCities.txt", "GermanyCities.txt"]
-radius = [0.08, 0.005, 0.0025]
-start_city = [0, 311, 1573]
-end_city = [5, 702, 10584]
-R = 1   # normalized radii
-
-file_to_run = int(input('Type 1,2 or 3 to select file to run\n 1: SampleCoordinates\n 2: HungaryCities\n 3:'
-                        ' GermanyCities\n'))
-
-if file_to_run == 1:
-    filename = file[0]
-    radius = radius[0]
-    start_node = start_city[0]
-    end_node = end_city[0]
-
-elif file_to_run == 2:
-    filename = file[1]
-    radius = radius[1]
-    start_node = start_city[1]
-    end_node = end_city[1]
-
-elif file_to_run == 3:
-    filename = file[2]
-    radius = radius[2]
-    start_node = start_city[2]
-    end_node = end_city[2]
-
 
 # Task 1
 def read_coordinate_file(filename):
@@ -49,9 +22,8 @@ def read_coordinate_file(filename):
     with open(filename, mode='r') as file:
         list_of_floats = []
         for line in file:
-            strip_line = line.strip("{ } \n")   # strips {} and \n
-            replace_line = strip_line.replace(" ", "")  # removes blank spaces
-            split_line = replace_line.split(sep=",")    # Splits the by ,
+            strip_line = line.strip("{ } \n " "")   # strips {}, \n and blank spaces
+            split_line = strip_line.split(sep=",")    # Splits the by ,
             for item in split_line:
                 list_of_floats.append(float(item))
     float_list = np.array(list_of_floats)
@@ -61,12 +33,6 @@ def read_coordinate_file(filename):
     coord_list = np.array([x_coordinates, y_coordinates]).T
 
     return coord_list
-
-# Timing the first function and printing to command window, this will be repeated for every function.
-start = time.time()
-coord_list = read_coordinate_file(filename)
-end = time.time()
-print("read_coordinate_file: ", end - start)
 
 
 # Task 2
@@ -120,20 +86,6 @@ def construct_fast_graph_connections(coord_list, radius):
     return distance_array, index_array
 
 
-start = time.time()
-[distance, indices] = construct_graph_connections(coord_list, radius)
-end = time.time()
-print("construct_graph_connections: ", end - start)
-
-start = time.time()
-[distance, indices] = construct_fast_graph_connections(coord_list, radius)
-end = time.time()
-print("construct_fast_graph_connections: ", end - start)
-
-
-N = len(coord_list)     # Number of cities
-
-
 def construct_graph(indices, distance, N):
     """
     construct_graphs
@@ -147,12 +99,6 @@ def construct_graph(indices, distance, N):
     M = N   # M should be same length as N
     sparse_graph = csr_matrix((distance, (indices[:, 0], indices[:, 1])), shape=(M, N))     # Scipy method for csr
     return sparse_graph
-
-
-start = time.time()
-graph = construct_graph(indices, distance, N)
-end = time.time()
-print("construct_graph: ", end - start)
 
 
 def find_shortest_path(graph, start_node, end_node):
@@ -178,12 +124,6 @@ def find_shortest_path(graph, start_node, end_node):
 
     path = path[::-1]      # Reverse the path into chronological order
     return path, path_length
-
-
-start = time.time()
-[path, path_length] = find_shortest_path(graph, start_node, end_node)
-end = time.time()
-print("find_shortest_path: ", end - start)
 
 
 def plot_points(coord_list, indices, path):
@@ -219,10 +159,77 @@ def plot_points(coord_list, indices, path):
     plt.show()
 
 
+# Choosing input file
+file = ["SampleCoordinates.txt", "HungaryCities.txt", "GermanyCities.txt"]
+radius = [0.08, 0.005, 0.0025]
+start_city = [0, 311, 1573]
+end_city = [5, 702, 10584]
+R = 1   # normalized radii
+
+file_to_run = input('Type 1,2 or 3 to select file to run\n 1: SampleCoordinates\n 2: HungaryCities\n 3:'
+                    ' GermanyCities\n')
+while True:
+    if file_to_run == "1":
+        filename = file[0]
+        radius = radius[0]
+        start_node = start_city[0]
+        end_node = end_city[0]
+        break
+
+    elif file_to_run == "2":
+        filename = file[1]
+        radius = radius[1]
+        start_node = start_city[1]
+        end_node = end_city[1]
+        break
+
+    elif file_to_run == "3":
+        filename = file[2]
+        radius = radius[2]
+        start_node = start_city[2]
+        end_node = end_city[2]
+        break
+    else:
+        file_to_run = input('Please enter correct form: 1,2 or 3 to select file to run\n 1: SampleCoordinates\n '
+                            '2: HungaryCities\n 3:'' GermanyCities\n')
+
+# Calling and timing the functions then printing to command window
+start = time.time()
+coord_list = read_coordinate_file(filename)
+end = time.time()
+print("read_coordinate_file: ", end - start)
+
+
+start = time.time()
+[distance, indices] = construct_graph_connections(coord_list, radius)
+end = time.time()
+print("construct_graph_connections: ", end - start)
+
+
+start = time.time()
+[distance, indices] = construct_fast_graph_connections(coord_list, radius)
+end = time.time()
+print("construct_fast_graph_connections: ", end - start)
+
+
+N = len(coord_list)     # Number of cities
+start = time.time()
+graph = construct_graph(indices, distance, N)
+end = time.time()
+print("construct_graph: ", end - start)
+
+
+start = time.time()
+[path, path_length] = find_shortest_path(graph, start_node, end_node)
+end = time.time()
+print("find_shortest_path: ", end - start)
+
+
 start = time.time()
 plot_points(coord_list, indices, path)
 end = time.time()
 print("plot_points: ", start - end)
+
 
 # Prints path and length
 print(path)
